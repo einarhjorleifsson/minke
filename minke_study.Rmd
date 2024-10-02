@@ -1,0 +1,48 @@
+---
+title: "My first markdown"
+author: "Einar Hjörleifsson"
+date: "2024-10-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Abstract
+
+... bla, bla, bla, 
+
+# Methods
+
+... bla, bla, bla, 
+
+# Results
+
+... bla, bla, bla, 
+
+```{r}
+library(tidyverse)
+w <- read_csv(file = "ftp://ftp.hafro.is/pub/data/csv/minke.csv")
+ggplot(w, aes(age, length, colour = sex)) +
+  geom_point() +
+  geom_smooth() +
+  labs(x = "Age [year]",
+       y = "Length [cm]",
+       colour = "Sex",
+       title = "Minke whale",
+       subtitle = "Age and length by sex",
+       caption = "Data from Iceland") +
+  scale_colour_brewer(palette = "Set1")
+```
+
+# Discussion
+
+... bla, bla, bla, 
+
+# A thankyou
+
+Thank you Hadley, Yihui and the RStudio team
+
+# References
+
