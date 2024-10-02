@@ -25,6 +25,7 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 library(tidyverse)
 w <- read_csv(file = "ftp://ftp.hafro.is/pub/data/csv/minke.csv")
 ggplot(w, aes(age, length, colour = sex)) +
+  theme_bw(base_size = 20) +
   geom_point() +
   geom_smooth() +
   labs(x = "Age [year]",
