@@ -1,108 +1,167 @@
 ---
-title: "Housing Prices"
-author: "Mine Çetinkaya-Rundel"
+title: "Minke report"
+author: "Einar Hjörleifsson"
+execute:                  # Stuff applies to all outputs
+  echo: false              # Do not show code
+  message: false           # Do not show R messages
+  warning: false           # Do not shoe R warnings
 format:
-  html: 
-    code-fold: true
-  pdf: default
-  docx: default
+  html:                   # Stuff below only specific to html
+    embed-resources: true  # Keep everything inside the html-docuemnt
+  pdf: default            # Stuff below only applicable for pdf
+  docx: default           # Stuff below only applicable for word-document
+bibliography: my_bib.bib
 ---
 
 ## Introduction
 
-In this analysis, we build a model predicting sale prices of houses based on data on houses that were sold in the Duke Forest neighborhood of Durham, NC around November 2020.
-Let's start by loading the packages we'll use for the analysis.
+![minkejpg](https://www.7seaswhalewatch.com/wp-content/uploads/whale-watch-boston-00005.jpg){#fig-minke}
+
+In this analysis, we build a model predicting length of minke whales from age based on data on of minke whales that were collected around Iceland[^1] in the early part of this century.
+
+[^1]: The original data is likely in the [MFRI](https://www.hafogvatn.is/en) database, but the code used to extract the data was not preserved.
 
 ```{r}
 #| label: load-pkgs
-#| code-summary: "Packages"
-#| message: false
-
-library(openintro)  # for data
 library(tidyverse)  # for data wrangling and visualization
 library(knitr)      # for tables
 library(broom)      # for model summary
+library(modelr)     # for model predictions
+```
+
+```{r}
+#| label: load-data
+w <- 
+  read_csv(file = "ftp://ftp.hafro.is/pub/data/csv/minke.csv") |> 
+  select(age, length) |> 
+  drop_na()
 ```
 
 We present the results of exploratory data analysis in @sec-eda and the regression model in @sec-model.
 
-<!--# ADD CITATION HERE -->
+<!--# One can write comments this way. This will not be rendered -->
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
 ## Exploratory data analysis {#sec-eda}
 
-The data contains `{r} nrow(duke_forest)` houses.
-As part of the exploratory analysis let's visualize and summarize the relationship between areas and prices of these houses.
+The data contains `{r} nrow(w)` minke whales. As part of the exploratory analysis let's visualize and summarize the relationship between age and length of these whales.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
 ### Data visualization
 
-@fig-histogram shows two histograms displaying the distributions of `price` and `area` individually.
+@fig-histogram shows two histograms displaying the distributions of `age` and `length` individually. .
 
 ```{r}
-#| label: fig-histogram
-#| fig-cap: "Histograms of individual variables"
-#| fig-subcap:
-#|   - "Histogram of `price`s"
-#|   - "Histogram of `area`s" 
-#| layout-ncol: 2
-
-ggplot(duke_forest, aes(x = price)) +
-  geom_histogram(binwidth = 50000) +
-  labs(title = "Histogram of prices")
-
-ggplot(duke_forest, aes(x = area)) +
-  geom_histogram(binwidth = 250) +
-  labs(title = "Histogram of areas")
+#| label: fig-histogram           # label for crossreferncing
+#| fig-cap: Histogram of age and length of minke whales
+w |> 
+  gather(var, val) |> 
+  mutate(var = case_when(var == "age" ~ "Age [years]",
+                         var == "length" ~ "Length [cm]")) |> 
+  ggplot(aes(val)) +
+  geom_histogram() +
+  facet_wrap(~ var, scales = "free") +
+  labs(x = NULL, y = "Number of minke whales")
 ```
 
-@fig-scatterplot displays the relationship between these two variables in a scatterplot.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+
+A visualization of the relationship between these two variables is presented in @fig-scatterplot.
 
 ```{r}
-#| label: fig-scatterplot
-#| fig-cap: "Scatterplot of price vs. area of houses in Duke Forest"
-
-ggplot(duke_forest, aes(x = area, y = price)) +
+#| label: fig-scatterplot     # label for crossreferncing
+#| fig-cap: Length of minke as a function of age
+#| fig-height: 2.5               # non-default figure height (inches)
+p <- 
+  ggplot(w, aes(age, length)) +
   geom_point() +
-  labs(title = "Price and area of houses in Duke Forest")
+  labs(x = "Age [year]",
+       y = "Length [cm]") +
+  scale_colour_brewer(palette = "Set1")
+p
 ```
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+Length as a function of age (@fig-scatterplot) seems to follow the [von Bertalanffy](https://en.wikipedia.org/wiki/Ludwig_von_Bertalanffy) function (@bertalanffy1969general) one mathematical form being:
+
+$$
+l = L_{\infty}(1-e^{-k(a-t_0)})
+$$ {#eq-vonB}
 
 ### Summary statistics
 
-@tbl-stats displays basic summary statistics for these two variables.
+@tbl-summary_stats displays basic summary statistics for these two variables.
 
 ```{r}
-#| label: tbl-stats
+#| label: tbl-summary_stats
 #| tbl-cap: "Summary statistics for price and area of houses in Duke Forest"
-
-duke_forest %>%
-  summarise(
-    `Median price` = median(price),
-    `IQR price` = IQR(price),
-    `Median area` = median(area),
-    `IQR area` = IQR(area),
-    `Correlation, r` = cor(price, area)
-    ) %>%
-  kable(digits = c(0, 0, 0, 0, 2))
+w |> summary() |> kable()
 ```
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
 ## Modeling {#sec-model}
 
-We can fit a simple linear regression model of the form shown in .
-
-\[ADD EQUATION HERE\]
-
-@tbl-lm shows the regression output for this model.
+We can fit a simple linear regression model of the form shown in (@eq-vonB), using the following R-syntax:
 
 ```{r}
-#| label: tbl-lm
-#| tbl-cap: "Linear regression model for predicting price from area"
-
-price_fit <- lm(price ~ area, data = duke_forest)
-  
-price_fit %>%
-  tidy() %>%
-  kable(digits = c(0, 0, 2, 2, 2))
+#| echo: true                  # overwrite the default set in "header"
+w.fit <- 
+  nls(length ~ Linf * (1 - exp(-K * (age - t0))),
+      data = w, 
+      start = list(Linf = 1100, K = 0.1, t0 = -1))
 ```
 
-<!--# ADD CALLOUT HERE -->
+The results of the model estimates (@tbl-model) indicate that $L_{\infty}$ and $K$ are highly significant, while using the $t_0$ in the model is not warranted[^2].
 
-<!--# ADD SECTION HEADING FOR REFERENCES HERE -->
+[^2]: Dropping the last parameter was however not considered in this analysis
+
+```{r}
+#| label: tbl-model
+#| tbl-cap: "Linear regression model for predicting length from age"
+w.fit <- 
+  nls(length ~ Linf * (1 - exp(-K * (age - t0))),
+      data = w, 
+      start = list(Linf = 1100, K = 0.1, t0 = -1))
+w.fit |> broom::tidy(conf.int = TRUE) |> kable(digits = c(3, 3, 3, 5, 3, 3))
+```
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+A plot of the fitted model over the observations is shown in @fig-final.
+
+```{r}
+#| label: fig-final                        # label for crossreferncing
+#| fig-cap: Length of minke as a function of age
+p +
+  geom_line(data = w |> modelr::add_predictions(w.fit),
+            aes(y = pred),
+            linewidth = 1,
+            colour = "red")
+```
+
+## Discussion
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+
+### How to cook minke
+
+Minke is best un-cooked, served as you would any sushi. If you cook them, just sear them. They are wonderful as kebabs.
+
+![kebabs](https://upload.wikimedia.org/wikipedia/commons/e/ef/Mink_Whale_Meat_Iceland.JPG)
+
+### How to count minkes
+
+An informative article was recently published by @hammond2021estimating.
+
+## Acknowledgment
+
+This document was created in [quarto](https://quarto.org)
+
