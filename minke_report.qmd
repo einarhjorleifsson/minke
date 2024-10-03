@@ -32,7 +32,7 @@ library(modelr)     # for model predictions
 ```{r}
 #| label: load-data
 w <- 
-  read_csv(file = "ftp://ftp.hafro.is/pub/data/csv/minke.csv") |> 
+  read_csv(file = "data-raw/minke.csv") |> 
   select(age, length) |> 
   drop_na()
 ```
